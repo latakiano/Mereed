@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة العشرين مرحلة - طريق الزواج</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #2c3e50; font-family: Arial, sans-serif; text-align: center; color: white; }
+        canvas { background: #ecf0f1; display: block; margin: 20px auto; border: 5px solid #34495e; border-radius: 10px; }
+        .info { font-size: 24px; margin-top: 10px; }
+        #congrats { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                    background: rgba(231, 76, 60, 0.9); padding: 50px; border-radius: 20px; border: 4px solid gold; }
+    </style>
+</head>
+<body>
+
+    <div class="info">
+        المرحلة: <span id="levelDisplay">1</span> / 20 | 
+        النقاط: <span id="scoreDisplay">0</span>
+    </div>
+
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+
+    <div id="congrats">
+        <h1>ألف مبروك! 🎉</h1>
+        <p>لقد اجتزت جميع المراحل.. أنت الآن جاهز لأجمل زواج!</p>
+        <button onclick="location.reload()" style="padding: 10px 20px; cursor: pointer;">العب مجدداً</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const levelDisplay = document.getElementById('levelDisplay');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const congratsScreen = document.getElementById('congrats');
+
+        // متغيرات اللعبة
+        let currentLevel = 1;
+        let score = 0;
+        let gameActive = true;
+        
+        // كائن اللاعب
+        const player = {
+            x: 50, y: 300, width: 40, height: 40, color: '#e67e22',
+            dy: 0, jumpForce: 12, gravity: 0.6, grounded: false
+        };
+
+        // العوائق
+        let obstacles = [];
+        let obstacleSpeed = 5;
+
+        // إعداد المرحلة
+        function initLevel(level) {
+            obstacles = [];
+            obstacleSpeed = 4 + (level * 0.8); // تزداد السرعة مع كل مرحلة
+            player.x = 50;
+            player.y = 300;
+            score = 0;
+            levelDisplay.innerText = level;
+        }
+
+        function createObstacle() {
+            let height = 30 + Math.random() * 50;
+            obstacles.push({
+                x: canvas.width,
+                y: canvas.height - height,
+                width: 30,
+                height: height,
+                color: '#c0392b'
+            });
+        }
+
+        // التحكم
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && player.grounded) {
+                player.dy = -player.jumpForce;
+                player.grounded = false;
+            }
+        });
+
+        function update() {
+            if (!gameActive) return;
+
+            // الجاذبية
+            player.dy += player.gravity;
+            player.y += player.dy;
+
+            if (player.y + player.height > canvas.height) {
+                player.y = canvas.height - player.height;
+                player.dy = 0;
+                player.grounded = true;
+            }
+
+            // تحريك العوائق
+            if (Math.random() < 0.02) createObstacle();
+
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                obstacles[i].x -= obstacleSpeed;
+
+                // تصادم
+                if (player.x < obstacles[i].x + obstacles[i].width &&
+                    player.x + player.width > obstacles[i].x &&
+                    player.y < obstacles[i].y + obstacles[i].height &&
+                    player.y + player.height > obstacles[i].y) {
+                    // إعادة المرحلة عند الخسارة
+                    initLevel(currentLevel);
+                }
+
+                // كسب النقاط
+                if (obstacles[i].x + obstacles[i].width < 0) {
+                    obstacles.splice(i, 1);
+                    score++;
+                    scoreDisplay.innerText = score;
+
+                    // الانتقال للمرحلة التالية (كل 5 نقاط مرحلة)
+                    if (score >= 5) {
+                        if (currentLevel < 20) {
+                            currentLevel++;
+                            initLevel(currentLevel);
+                        } else {
+                            gameActive = false;
+                            congratsScreen.style.display = 'block';
+                        }
+                    }
+                }
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // رسم اللاعب
+            ctx.fillStyle = player.color;
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+
+            // رسم العوائق
+            ctx.fillStyle = '#c0392b';
+            for (let obs of obstacles) {
+                ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+            }
+
+            // نص المرحلة داخل الـ Canvas
+            ctx.fillStyle = "rgba(0,0,0,0.1)";
+            ctx.font = "bold 100px Arial";
+            ctx.fillText(currentLevel, canvas.width/2 - 50, canvas.height/2 + 50);
+        }
+
+        function loop() {
+            update();
+            draw();
+            requestAnimationFrame(loop);
+        }
+
+        initLevel(currentLevel);
+        loop();
+    </script>
+</body>
+</html>
