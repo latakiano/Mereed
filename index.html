@@ -3,187 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Royal Cat Survival: The Pro Edition</title>
+    <title>The Realistic Cat Escape</title>
     <style>
-        :root { --gold: #FFD700; --cyan: #00F2FF; --royal-blue: #0a0a2e; }
-        body { margin: 0; background: #000; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; touch-action: none; }
-        
-        /* واجهة الانطلاق الفخمة */
-        #menu { 
-            position: fixed; inset: 0; background: radial-gradient(circle, #1a1a4a 0%, #050510 100%); 
+        body { margin: 0; background: #000; overflow: hidden; font-family: 'Cairo', sans-serif; touch-action: none; }
+        #overlay { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); 
             z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: 0.5s;
         }
-
-        .main-card { 
-            background: rgba(255, 255, 255, 0.05); padding: 30px; border-radius: 40px; 
-            border: 2px solid var(--gold); width: 85%; max-width: 400px; text-align: center;
-            box-shadow: 0 0 50px rgba(255, 215, 0, 0.2); backdrop-filter: blur(10px);
+        .window { 
+            background: #1a1a2e; padding: 25px; border-radius: 30px; border: 2px solid #ffd700;
+            width: 85%; max-width: 400px; text-align: center; color: white; box-shadow: 0 0 40px #ffd70044;
         }
-
-        .shop-btn { 
-            display: inline-block; margin: 5px; padding: 10px; border: 1px solid var(--cyan); 
-            border-radius: 12px; font-size: 10px; color: white; background: rgba(0,242,255,0.1);
+        .btn-start { 
+            background: #ffd700; color: #000; padding: 15px 60px; border-radius: 50px;
+            border: none; font-size: 22px; font-weight: bold; cursor: pointer; margin-top: 25px;
         }
-
-        .play-btn { 
-            background: var(--gold); color: #000; padding: 20px 80px; border-radius: 50px; 
-            border: none; font-size: 24px; font-weight: 900; cursor: pointer; margin-top: 30px;
-            box-shadow: 0 10px 30px rgba(255, 215, 0, 0.4); transition: 0.3s;
-        }
-        .play-btn:active { transform: scale(0.9); }
-
-        #stats { 
-            position: fixed; top: 20px; right: 20px; color: var(--gold); 
-            font-weight: bold; font-size: 18px; z-index: 500; text-shadow: 2px 2px 5px #000;
-        }
-
+        #hud { position: fixed; top: 15px; left: 15px; color: #ffd700; font-size: 18px; z-index: 100; font-weight: bold; }
         canvas { display: block; }
     </style>
 </head>
 <body>
 
-<div id="stats">الارتفاع: <span id="dist">0</span> متر</div>
+<div id="hud">المسافة: <span id="dist">0</span> متر</div>
 
-<div id="menu">
-    <div class="main-card">
-        <h1 style="color:var(--gold); margin:0; font-size: 28px;">ROYAL CAT SHOP</h1>
-        <p style="color: #ccc; font-size: 14px; margin-bottom: 20px;">المهمة: الوصول بالقطة للأمان للزواج بـ 55 عاماً 💍</p>
-        
-        <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;">
-            <div class="shop-btn">🐱 هيمالايا</div>
-            <div class="shop-btn">🐈 سيامي</div>
-            <div class="shop-btn" style="border-color: var(--gold);">🦁 الملكي</div>
-            <div class="shop-btn">👑 الأسطوري</div>
-        </div>
-
-        <div style="margin-top: 20px; padding: 10px; background: rgba(255,0,0,0.1); border-radius: 15px; border: 1px dashed #ff4757;">
-            <span style="color:#ff4757; font-size: 12px;">❤️ متجر التبرع لعلاج القطط ($1)</span>
+<div id="overlay">
+    <div class="window">
+        <h2 style="color:#ffd700;">🌟 متجر القطط العالمي 🌟</h2>
+        <p>القطة الآن تملك 4 أرجل تتحرك بحرية!</p>
+        <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:15px; font-size:12px;">
+            تأكد من لمس الشاشة باستمرار لتبقى القطة طائرة 🚀
         </div>
     </div>
-    <button class="play-btn" id="startBtn">ابدأ المهمة 🚀</button>
+    <button class="btn-start" id="playBtn">إبدأ المغامرة</button>
 </div>
 
-<canvas id="stage"></canvas>
+<canvas id="game"></canvas>
 
 <script>
-const canvas = document.getElementById('stage'), ctx = canvas.getContext('2d');
-const menu = document.getElementById('menu'), startBtn = document.getElementById('startBtn');
-const distShow = document.getElementById('dist');
+const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
+const overlay = document.getElementById('overlay'), playBtn = document.getElementById('playBtn');
 
-let active = false, score = 0, frame = 0, enemies = [];
-let cat = { x: 100, y: 0, v: 0, g: 0.45, j: -9, angle: 0, legPh: 0 };
+let active = false, frame = 0, score = 0, enemies = [];
+let cat = { x: 80, y: 0, v: 0, g: 0.45, j: -8.5, legAngle: 0 };
 
-function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
+function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 window.onresize = resize; resize();
 
-// تشغيل اللعبة
-startBtn.onclick = () => {
-    menu.style.opacity = '0';
-    setTimeout(() => { 
-        menu.style.display = 'none';
-        active = true;
-        cat.y = canvas.height / 2;
-        cat.v = 0; score = 0; enemies = []; frame = 0;
-        loop();
-    }, 500);
+playBtn.onclick = () => {
+    overlay.style.display = 'none';
+    cat.y = canvas.height / 2;
+    cat.v = 0; score = 0; enemies = []; frame = 0;
+    active = true;
+    loop();
 };
 
-// قفزة القطة
-const doJump = () => { if(active) cat.v = cat.j; };
-window.addEventListener('mousedown', doJump);
-window.addEventListener('touchstart', (e) => { doJump(); e.preventDefault(); }, {passive: false});
+window.onmousedown = () => { if(active) cat.v = cat.j; };
+window.ontouchstart = (e) => { if(active) cat.v = cat.j; e.preventDefault(); };
 
 function drawCat() {
-    cat.legPh += 0.25;
-    cat.angle = Math.min(Math.PI/4, Math.max(-Math.PI/4, cat.v * 0.05));
-    
+    cat.legAngle = Math.sin(frame * 0.15) * 0.5;
     ctx.save();
     ctx.translate(cat.x, cat.y);
-    ctx.rotate(cat.angle);
+    
+    // الأرجل (حركة طبيعية أكثر)
+    ctx.strokeStyle = "#ffd700"; ctx.lineWidth = 3;
+    // رجلين أماميتين
+    ctx.beginPath(); ctx.moveTo(10, 5); ctx.lineTo(15 + cat.legAngle*15, 20); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(5, 5); ctx.lineTo(10 - cat.legAngle*15, 20); ctx.stroke();
+    // رجلين خلفيتين
+    ctx.beginPath(); ctx.moveTo(-10, 5); ctx.lineTo(-15 + cat.legAngle*15, 20); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-15, 5); ctx.lineTo(-20 - cat.legAngle*15, 20); ctx.stroke();
 
-    // الأرجل الأربعة (حركة ركض حقيقية)
-    ctx.strokeStyle = "#FFD700"; ctx.lineWidth = 4;
-    for(let i=0; i<4; i++) {
-        let lx = -15 + (i * 10);
-        let ly = 12 + Math.sin(cat.legPh + i) * 10;
-        ctx.beginPath(); ctx.moveTo(lx, 5); ctx.lineTo(lx, ly); ctx.stroke();
-    }
-
-    // جسم القطة (تصميم ملكي)
-    ctx.fillStyle = "#FFD700";
-    ctx.beginPath(); ctx.ellipse(0, 0, 30, 18, 0, 0, 7); ctx.fill();
-    // الرأس
-    ctx.beginPath(); ctx.arc(22, -12, 14, 0, 7); ctx.fill();
-    // الأذنين
-    ctx.beginPath(); ctx.moveTo(15, -22); ctx.lineTo(22, -35); ctx.lineTo(29, -22); ctx.fill();
-    // الذيل
-    ctx.strokeStyle = "#FFD700"; ctx.lineWidth = 6;
-    ctx.beginPath(); ctx.moveTo(-25, 0); ctx.quadraticCurveTo(-45, -20, -35, -35); ctx.stroke();
-    // العيون
-    ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(28, -14, 3, 0, 7); ctx.fill();
+    // الجسم والذيل
+    ctx.fillStyle = "#ffd700";
+    ctx.beginPath(); ctx.ellipse(0, 0, 25, 15, 0, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(20, -10, 12, 0, 7); ctx.fill(); // الرأس
+    
+    // ذيل طويل وجميل
+    ctx.beginPath(); ctx.moveTo(-25, 0); ctx.quadraticCurveTo(-40, -20, -30, -30); ctx.stroke();
+    
+    // العين
+    ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(25, -12, 2.5, 0, 7); ctx.fill();
     ctx.restore();
 }
 
-function drawGhost(e) {
+function drawMonster(e) {
     ctx.save();
     ctx.translate(e.x, e.y);
-    let wave = Math.sin(frame * 0.1) * 10;
-    
-    // وحش "شبح" مرعب
-    ctx.fillStyle = "rgba(255, 255, 255, 0.2)";
-    ctx.beginPath();
-    ctx.moveTo(-20, 20); ctx.lineTo(-20, -10);
-    ctx.quadraticCurveTo(0, -35, 20, -10); ctx.lineTo(20, 20);
-    ctx.lineTo(10, 10 + wave); ctx.lineTo(0, 20); ctx.lineTo(-10, 10 + wave); ctx.close();
-    ctx.fill();
-
-    // عيون حمراء متوهجة
+    // وحش "التنين الظلي"
+    ctx.fillStyle = "#222";
+    ctx.beginPath(); ctx.moveTo(-30, 0); ctx.lineTo(0, -20); ctx.lineTo(30, 0); ctx.lineTo(0, 20); ctx.close(); ctx.fill();
+    // عيون مرعبة
     ctx.fillStyle = "red";
-    ctx.beginPath(); ctx.arc(-7, -8, 4, 0, 7); ctx.arc(7, -8, 4, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(-5, -2, 3, 0, 7); ctx.arc(5, -2, 3, 0, 7); ctx.fill();
     ctx.restore();
 }
 
 function loop() {
     if(!active) return;
     frame++; score++;
-    distShow.innerText = Math.floor(score/10);
+    document.getElementById('dist').innerText = Math.floor(score/10);
 
-    // خلفية "ليلة الساحل"
-    let grd = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    grd.addColorStop(0, "#050520"); grd.addColorStop(1, "#1a0a30");
-    ctx.fillStyle = grd; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // خلفية متدرجة فخمة
+    let g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    g.addColorStop(0, "#050515"); g.addColorStop(1, "#1a0a30");
+    ctx.fillStyle = g; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // فيزياء القطة
     cat.v += cat.g;
     cat.y += cat.v;
     drawCat();
 
-    // ظهور الوحوش (الأشباح)
-    if(frame % 90 == 0) {
-        enemies.push({ x: canvas.width + 50, y: 50 + Math.random()*(canvas.height-100) });
-    }
+    if(frame % 90 == 0) enemies.push({ x: canvas.width, y: Math.random() * canvas.height });
 
     for(let i=enemies.length-1; i>=0; i--) {
-        enemies[i].x -= 7;
-        drawGhost(enemies[i]);
-
-        // تصادم دقيق
-        if(Math.hypot(cat.x - enemies[i].x, cat.y - enemies[i].y) < 45) {
-            active = false;
-            menu.style.display = 'flex'; menu.style.opacity = '1';
+        enemies[i].x -= 6;
+        drawMonster(enemies[i]);
+        if(Math.hypot(cat.x - enemies[i].x, cat.y - enemies[i].y) < 40) {
+            active = false; overlay.style.display = 'flex';
         }
-        if(enemies[i].x < -100) enemies.splice(i, 1);
+        if(enemies[i].x < -50) enemies.splice(i, 1);
     }
 
-    if(cat.y > canvas.height || cat.y < 0) {
-        active = false;
-        menu.style.display = 'flex'; menu.style.opacity = '1';
-    }
-
+    if(cat.y > canvas.height || cat.y < 0) { active = false; overlay.style.display = 'flex'; }
     requestAnimationFrame(loop);
 }
 </script>
