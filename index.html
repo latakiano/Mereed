@@ -3,167 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cat Legends: The $1M Journey</title>
+    <title>Cat Himalaya: The Horror Maze</title>
     <style>
-        :root { --gold: #FFD700; --cyan: #00F2FF; --purple: #702283; }
-        body { margin: 0; background: #000; overflow: hidden; font-family: 'Arial', sans-serif; touch-action: none; color: white; }
+        :root { --gold: #FFD700; --blood: #8a0303; }
+        body { margin: 0; background: #000; overflow: hidden; font-family: 'Cairo', sans-serif; touch-action: none; color: white; }
         
-        /* واجهة المتجر والمراحل */
-        .overlay { 
+        /* شاشة الانتقال بين المراحل */
+        #stage-screen { 
             position: fixed; inset: 0; background: rgba(0,0,0,0.95); 
-            z-index: 1000; display: flex; flex-direction: column; align-items: center; 
-            padding: 20px; overflow-y: auto;
+            z-index: 2000; display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
         .window { 
-            background: linear-gradient(145deg, #1a1a2e, #000); padding: 25px; 
-            border-radius: 30px; border: 2px solid var(--gold); width: 90%; max-width: 500px; text-align: center;
+            background: linear-gradient(180deg, #1a0000, #000); padding: 40px; 
+            border-radius: 30px; border: 2px solid var(--blood); text-align: center;
+            box-shadow: 0 0 50px var(--blood);
         }
-        .shop-grid { 
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); 
-            gap: 10px; margin: 20px 0; max-height: 200px; overflow-y: auto; background: #000; padding: 10px; border-radius: 15px;
+        .next-btn { 
+            background: var(--blood); color: white; padding: 15px 50px; border: none; 
+            border-radius: 50px; font-size: 20px; font-weight: bold; cursor: pointer; margin-top: 20px;
         }
-        .card { background: #16163a; padding: 10px; border-radius: 15px; border: 1px solid #333; cursor: pointer; }
-        .card.active { border-color: var(--cyan); box-shadow: 0 0 10px var(--cyan); }
-        
-        .start-btn { 
-            background: var(--gold); color: #000; padding: 15px 60px; border-radius: 50px; 
-            border: none; font-size: 22px; font-weight: bold; cursor: pointer; margin-top: 20px;
-        }
-
-        #hud { 
-            position: fixed; top: 15px; width: 100%; display: flex; justify-content: space-around;
-            z-index: 500; font-weight: bold; color: var(--gold); text-shadow: 2px 2px #000;
-        }
+        #hud { position: fixed; top: 10px; width: 100%; display: flex; justify-content: space-around; z-index: 500; font-weight: bold; color: var(--gold); }
+        canvas { display: block; }
     </style>
 </head>
 <body>
 
 <div id="hud">
-    <div>💰 الذهب: <span id="coin-val">0</span></div>
-    <div>📍 المرحلة: <span id="stage-val">1</span></div>
-    <div>📏 المسافة: <span id="dist-val">0</span></div>
+    <div>💰 العملات: <span id="coin-val">0</span></div>
+    <div>🦇 المرحلة: <span id="stage-val">1</span></div>
+    <div>📏 العمق: <span id="dist-val">0</span></div>
 </div>
 
-<div id="main-overlay" class="overlay">
+<div id="stage-screen">
     <div class="window">
-        <h1 style="color:var(--gold); margin:0;">🌟 متجر الأساطير (20 متجر) 🌟</h1>
-        <div class="shop-grid" id="cat-shop"></div>
-        
-        <div style="background:rgba(46, 204, 113, 0.2); padding:10px; border-radius:15px; border:1px solid #2ecc71; margin-bottom:10px;">
-            <p style="margin:0; font-size:12px;">🏥 تبرع إنساني لعلاج القطط ($1)</p>
-            <button onclick="playSfx(800,'sine',0.1)" style="background:#2ecc71; border:none; color:white; border-radius:5px; padding:3px 10px; cursor:pointer;">تبرع</button>
-        </div>
+        <h1 id="msg-title" style="color:var(--blood);">مدخل الدهليز المرعب</h1>
+        <p id="msg-desc">القطة هيمالايا عالقة في الكهف.. هل تستطيع إنقاذها؟</p>
+        <button class="next-btn" id="actionBtn" onclick="nextStage()">ابدأ المرحلة 1</button>
     </div>
-    <button class="start-btn" onclick="startGame()">انطلق للمغامرة 🚀</button>
 </div>
 
 <canvas id="game"></canvas>
 
 <script>
 const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
-let active = false, stage = 1, coinsCollected = 0, distance = 0, frame = 0;
-let obstacles = [], coins = [], particles = [];
-let p = { x: 100, y: 0, v: 0, g: 0.4, j: -8, color: "#FFD700", legPh: 0 };
+const screen = document.getElementById('stage-screen'), actionBtn = document.getElementById('actionBtn');
 
+// صور حقيقية
+const catImg = new Image(); catImg.src = 'https://cdn-icons-png.flaticon.com/512/1864/1864514.png'; // صورة قطة واقعية (أيقونة عالية الجودة)
+const monsterImg = new Image(); monsterImg.src = 'https://cdn-icons-png.flaticon.com/512/1211/1211053.png'; // وحش مرعب
+const coinImg = new Image(); coinImg.src = 'https://cdn-icons-png.flaticon.com/512/2489/2489756.png'; // عملة ذهبية حقيقية
+
+let active = false, stage = 1, coins = 0, distance = 0, frame = 0;
+let obstacles = [], goldList = [], stars = [];
+let p = { x: 150, y: 0, v: 0, g: 0.4, j: -8, w: 60, h: 50 };
+
+// أصوات مخيفة (بسيطة برمجياً)
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-function playSfx(f, t, d) {
-    try {
-        let o = audioCtx.createOscillator(), g = audioCtx.createGain();
-        o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d);
-        o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + d);
-    } catch(e){}
+function playHorrorSound(f, d) {
+    let o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(f, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d);
+    o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + d);
 }
 
-function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-window.onresize = resize; resize();
-
-// بناء 20 متجر
-const shop = document.getElementById('cat-shop');
-for(let i=1; i<=20; i++) {
-    shop.innerHTML += `<div class="card" onclick="stage=${i}; document.getElementById('stage-val').innerText=${i};">🛒 متجر ${i}<br><span style="color:var(--gold)">$0.99</span></div>`;
+function initStars() {
+    stars = [];
+    for(let i=0; i<100; i++) stars.push({x: Math.random()*innerWidth, y: Math.random()*innerHeight, s: Math.random()*2});
 }
+window.onresize = () => { canvas.width = innerWidth; canvas.height = innerHeight; initStars(); };
+window.onresize();
 
-function startGame() {
+function nextStage() {
     if(audioCtx.state === 'suspended') audioCtx.resume();
-    active = true; distance = 0; coinsCollected = 0; obstacles = []; coins = []; frame = 0;
+    screen.style.display = 'none';
+    active = true; distance = 0; obstacles = []; goldList = []; frame = 0;
     p.y = canvas.height / 2; p.v = 0;
-    document.getElementById('main-overlay').style.display = 'none';
-    playSfx(400, 'square', 0.2);
+    playHorrorSound(100, 1); // صوت دخول الكهف
     loop();
-}
-
-window.onmousedown = () => { if(active) { p.v = p.j; playSfx(600, 'sine', 0.1); } };
-window.ontouchstart = (e) => { if(active) { p.v = p.j; playSfx(600, 'sine', 0.1); e.preventDefault(); } };
-
-function drawCat() {
-    p.legPh += 0.2;
-    ctx.save(); ctx.translate(p.x, p.y);
-    // الأرجل الأربعة (حركة حقيقية)
-    ctx.strokeStyle = p.color; ctx.lineWidth = 3;
-    for(let i=0; i<4; i++) {
-        let ly = 15 + Math.sin(p.legPh + i) * 10;
-        ctx.beginPath(); ctx.moveTo(-15 + i*10, 5); ctx.lineTo(-15 + i*10, ly); ctx.stroke();
-    }
-    // الجسم والذيل
-    ctx.fillStyle = p.color; ctx.beginPath(); ctx.ellipse(0, 0, 25, 15, 0, 0, 7); ctx.fill();
-    ctx.beginPath(); ctx.arc(20, -10, 12, 0, 7); ctx.fill(); // الرأس
-    ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(25, -12, 2, 0, 7); ctx.fill(); // عين
-    ctx.restore();
-}
-
-function drawMonster(o) {
-    ctx.save(); ctx.translate(o.x, o.y);
-    let wing = Math.sin(frame * 0.2) * 20;
-    ctx.fillStyle = "#ff4757"; // وحش أحمر مرعب
-    ctx.beginPath(); ctx.moveTo(-30, wing); ctx.lineTo(0, 0); ctx.lineTo(30, wing); ctx.stroke(); // أجنحة
-    ctx.beginPath(); ctx.arc(0, 0, 20, 0, 7); ctx.fill(); // جسم
-    ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(-7, -5, 4, 0, 7); ctx.arc(7, -5, 4, 0, 7); ctx.fill(); // عيون
-    ctx.restore();
 }
 
 function loop() {
     if(!active) return;
     frame++; distance++;
-    document.getElementById('dist-val').innerText = Math.floor(distance/10);
+    document.getElementById('dist-val').innerText = distance;
 
-    // تغيير البيئة (كهف بعد مسافة معينة)
-    let bg = (distance > 1000) ? "#0a0a0a" : "#050515";
-    ctx.fillStyle = bg; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // رسم الخلفية (النجوم المرعبة)
+    ctx.fillStyle = "#000"; ctx.fillRect(0,0,canvas.width, canvas.height);
+    ctx.fillStyle = "#fff";
+    stars.forEach(s => { s.x -= 0.5; if(s.x < 0) s.x = canvas.width; ctx.fillRect(s.x, s.y, s.s, s.s); });
 
+    // رسم الدهليز (جدران علوية وسفلية بألوان متغيرة حسب المرحلة)
+    let hue = (stage * 40) % 360;
+    ctx.fillStyle = `hsla(${hue}, 100%, 10%, 0.8)`;
+    let wallH = 100 + Math.sin(frame*0.02) * 50;
+    ctx.fillRect(0, 0, canvas.width, wallH); // جدار علوي
+    ctx.fillRect(0, canvas.height - wallH, canvas.width, wallH); // جدار سفلي
+
+    // القطة هيمالايا
     p.v += p.g; p.y += p.v;
-    drawCat();
+    ctx.drawImage(catImg, p.x, p.y, p.w, p.h);
 
-    // الكوينز
-    if(frame % 60 == 0) coins.push({x: canvas.width, y: Math.random()*canvas.height});
-    coins.forEach((c, i) => {
-        c.x -= 5;
-        ctx.fillStyle = "gold"; ctx.beginPath(); ctx.arc(c.x, c.y, 10, 0, 7); ctx.fill();
-        if(Math.hypot(p.x-c.x, p.y-c.y) < 30) { 
-            coins.splice(i,1); coinsCollected++; 
-            document.getElementById('coin-val').innerText = coinsCollected;
-            playSfx(1000, 'sine', 0.1); 
+    // الكوينز الحقيقية
+    if(frame % 70 == 0) goldList.push({x: canvas.width, y: 150 + Math.random()*(canvas.height-300)});
+    goldList.forEach((g, i) => {
+        g.x -= 5;
+        ctx.drawImage(coinImg, g.x, g.y, 30, 30);
+        if(Math.hypot(p.x+20-g.x, p.y+20-g.y) < 35) { 
+            goldList.splice(i,1); coins++; 
+            document.getElementById('coin-val').innerText = coins;
+            playHorrorSound(800, 0.1);
         }
     });
 
-    // الوحوش
-    if(frame % (100 - stage*2) == 0) obstacles.push({x: canvas.width, y: Math.random()*canvas.height});
+    // الوحوش الحقيقية
+    if(frame % Math.max(30, 100 - stage*5) == 0 && distance < 1500) {
+        obstacles.push({x: canvas.width, y: wallH + Math.random()*(canvas.height-wallH*2-50), s: 60});
+    }
     obstacles.forEach((o, i) => {
         o.x -= (6 + stage);
-        drawMonster(o);
-        if(Math.hypot(p.x-o.x, p.y-o.y) < 35) endGame();
-        if(o.x < -100) obstacles.splice(i,1);
+        ctx.drawImage(monsterImg, o.x, o.y, o.s, o.s);
+        if(Math.hypot(p.x+25-o.x, p.y+25-o.y) < 40) die();
+        if(o.x < -100) obstacles.splice(i, 1);
     });
 
-    if(p.y > canvas.height || p.y < 0) endGame();
+    // نهاية المرحلة (الوصول لمدخل الكهف)
+    if(distance > 2000) {
+        active = false;
+        stage++;
+        if(stage > 20) {
+            alert("مبروك! لقد أنقذت القطة وتزوجت في الـ 55! 🎉💍");
+            location.reload();
+        } else {
+            document.getElementById('msg-title').innerText = "تم اجتياز الدهليز " + (stage-1);
+            document.getElementById('msg-desc').innerText = "استعد، الدهليز القادم أكثر رعباً وظلمة..";
+            document.getElementById('stage-val').innerText = stage;
+            actionBtn.innerText = "ابدأ المرحلة " + stage;
+            screen.style.display = 'flex';
+        }
+    }
+
+    if(p.y > canvas.height - wallH || p.y < wallH) die();
     requestAnimationFrame(loop);
 }
 
-function endGame() {
+function die() {
     active = false;
-    playSfx(100, 'sawtooth', 0.5);
-    document.getElementById('main-overlay').style.display = 'flex';
+    playHorrorSound(50, 0.8);
+    document.getElementById('msg-title').innerText = "لقد قتلك الوحش!";
+    document.getElementById('msg-desc').innerText = "حاول مرة أخرى لإنقاذ القطة.";
+    actionBtn.innerText = "إعادة المحاولة";
+    screen.style.display = 'flex';
 }
+
+// التحكم
+const jump = () => { if(active) p.v = p.j; };
+window.onmousedown = jump;
+window.ontouchstart = (e) => { jump(); e.preventDefault(); };
+
 </script>
 </body>
 </html>
