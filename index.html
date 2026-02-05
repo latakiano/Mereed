@@ -3,199 +3,201 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cat Survival: Elite Edition</title>
+    <title>Cat Survival: The Final Masterpiece</title>
     <style>
         :root { --gold: #FFD700; --cyan: #00F2FF; --red: #ff4757; }
-        body { margin: 0; background: #000; overflow: hidden; font-family: 'Segoe UI', Tahoma, sans-serif; touch-action: none; }
+        body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; touch-action: none; }
         
-        /* واجهة عالمية تفتح فوق كل شيء */
-        #main-overlay { 
+        /* الواجهة الكبرى - تظهر فوراً */
+        #ui-layer { 
             position: fixed; inset: 0; background: rgba(0,0,0,0.9); 
             z-index: 9999; display: flex; flex-direction: column; 
             align-items: center; justify-content: center; padding: 20px;
-            overflow-y: auto;
         }
 
         .window { 
             background: linear-gradient(145deg, #0a0a25, #16163a); 
-            padding: 20px; border-radius: 30px; border: 2px solid var(--cyan); 
-            width: 90%; max-width: 450px; text-align: center; color: white;
+            padding: 20px; border-radius: 30px; border: 3px solid var(--cyan); 
+            width: 90%; max-width: 400px; text-align: center; color: white;
+            box-shadow: 0 0 30px var(--cyan);
         }
 
         .shop-grid { 
             display: grid; grid-template-columns: repeat(4, 1fr); 
-            gap: 10px; margin: 15px 0; max-height: 180px; overflow-y: auto;
+            gap: 10px; margin: 15px 0; max-height: 150px; overflow-y: auto;
             background: rgba(0,0,0,0.5); padding: 10px; border-radius: 15px;
         }
 
         .card { 
-            background: #1f1f50; padding: 8px; border-radius: 12px; 
-            border: 2px solid #333; cursor: pointer; color: white; font-size: 10px;
+            background: #1f1f50; padding: 5px; border-radius: 10px; 
+            border: 2px solid #333; cursor: pointer; font-size: 10px;
         }
-        .card.active { border-color: var(--gold); background: #2a2a6a; transform: scale(1.05); }
+        .card.active { border-color: var(--gold); background: #2a2a6a; }
 
-        .start-btn { 
-            background: var(--gold); color: black; padding: 18px 60px; 
-            border-radius: 50px; border: none; font-size: 22px; 
-            font-weight: bold; cursor: pointer; margin-top: 20px;
+        .btn-start { 
+            background: var(--gold); color: black; padding: 20px 60px; 
+            border-radius: 50px; border: none; font-size: 24px; 
+            font-weight: bold; cursor: pointer; margin-top: 25px;
             box-shadow: 0 0 20px var(--gold);
         }
 
-        #distance-tag { 
-            position: fixed; top: 30px; left: -40px; 
-            background: var(--gold); color: black; padding: 8px 50px; 
-            transform: rotate(-45deg); font-weight: bold; z-index: 100;
+        canvas { display: block; background: #050510; }
+        
+        #hud { 
+            position: fixed; top: 10px; width: 100%; text-align: center;
+            color: var(--gold); font-weight: bold; pointer-events: none; z-index: 100;
         }
-
-        canvas { display: block; touch-action: none; }
     </style>
 </head>
 <body>
 
-<div id="distance-tag">MILES: <span id="dist-val">0</span></div>
+<div id="hud">الارتفاع: <span id="dist">0</span> متر</div>
 
-<div id="main-overlay">
+<div id="ui-layer">
     <div class="window">
-        <h2 style="color:var(--gold); margin:0;">ROYAL CAT SHOP</h2>
-        <p style="font-size:11px; color:var(--cyan);">اختر مستوى القطة وانطلق لجمع التبرعات</p>
+        <h2 style="color:var(--gold); margin:0;">متجر القطط الملكي</h2>
+        <p style="font-size:12px;">اختر قطتك وانطلق للمهمة العالمية</p>
         
-        <div class="shop-grid" id="cat-shop"></div>
+        <div class="shop-grid" id="shop"></div>
 
-        <div style="background:rgba(255, 71, 87, 0.2); padding:10px; border-radius:15px; border:1px solid var(--red);">
-            <p style="margin:0; font-size:12px; color:white;">🏥 تبرع إنساني $1 لعلاج الحالات الصعبة</p>
-            <button onclick="alert('شكراً لشهامتك! ❤️')" style="background:var(--red); border:none; color:white; padding:5px 15px; border-radius:8px; margin-top:5px; cursor:pointer;">تبرع</button>
+        <div style="border:1px dashed var(--red); padding:10px; border-radius:15px;">
+            <p style="margin:0; font-size:11px;">🏥 تبرع إنساني $1 لعلاج القطط</p>
+            <button onclick="alert('شكراً لقلبك الطيب!')" style="background:var(--red); border:none; color:white; padding:5px 15px; border-radius:8px; cursor:pointer;">تبرع</button>
         </div>
     </div>
-    <button class="start-btn" id="startBtn">START MISSION</button>
+    <button class="btn-start" id="runBtn">ابدأ اللعب الآن</button>
 </div>
 
-<canvas id="gameCanvas"></canvas>
+<canvas id="game"></canvas>
 
 <script>
-const canvas = document.getElementById('gameCanvas');
+const canvas = document.getElementById('game');
 const ctx = canvas.getContext('2d');
-const overlay = document.getElementById('main-overlay');
-const startBtn = document.getElementById('startBtn');
+const ui = document.getElementById('ui-layer');
+const runBtn = document.getElementById('runBtn');
 
-let active = false;
+let isPlaying = false;
 let frame = 0;
-let distance = 0;
-let obstacles = [];
-let p = { x: 100, y: 0, v: 0, g: 0.5, j: -9, color: "#FFD700", legPhase: 0 };
+let score = 0;
+let enemies = [];
+let cat = { x: 80, y: 0, v: 0, g: 0.4, j: -8, color: "#FFD700" };
 
-function init() {
+// ضبط الحجم
+function setup() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 }
-window.addEventListener('resize', init);
-init();
+window.onresize = setup;
+setup();
 
-// إنشاء المتجر
-const shop = document.getElementById('cat-shop');
+// توليد المتجر
+const shopBox = document.getElementById('shop');
 for(let i=1; i<=20; i++) {
-    const card = document.createElement('div');
-    card.className = `card ${i===1?'active':''}`;
-    card.innerHTML = `🐱<br>LVL ${i}`;
-    card.onclick = () => {
+    let d = document.createElement('div');
+    d.className = `card ${i===1?'active':''}`;
+    d.innerHTML = `🐱<br>L${i}`;
+    d.onclick = () => {
         document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
-        card.classList.add('active');
-        p.color = `hsl(${(i*50)%360}, 80%, 60%)`;
+        d.classList.add('active');
+        cat.color = `hsl(${i*40}, 80%, 60%)`;
     };
-    shop.appendChild(card);
+    shopBox.appendChild(d);
 }
 
-// دالة البدء المؤكدة
-startBtn.addEventListener('click', () => {
-    active = true;
-    distance = 0;
-    obstacles = [];
-    p.y = canvas.height / 2;
-    p.v = 0;
-    overlay.style.display = 'none';
-    gameLoop();
+// البدء الحقيقي
+runBtn.addEventListener('click', () => {
+    ui.style.display = 'none';
+    cat.y = canvas.height / 2;
+    cat.v = 0;
+    enemies = [];
+    score = 0;
+    frame = 0;
+    isPlaying = true;
+    loop();
 });
 
-// التحكم بالقفز
-const triggerJump = () => { if(active) p.v = p.j; };
-window.addEventListener('mousedown', triggerJump);
-window.addEventListener('touchstart', (e) => { triggerJump(); e.preventDefault(); }, {passive: false});
+// القفز
+function jump() { if(isPlaying) cat.v = cat.j; }
+window.addEventListener('mousedown', jump);
+window.addEventListener('touchstart', (e) => { jump(); e.preventDefault(); }, {passive: false});
 
-function drawCat(x, y) {
-    p.legPhase += 0.2;
+function drawCat() {
     ctx.save();
-    ctx.translate(x, y);
+    ctx.translate(cat.x, cat.y);
     
-    // رسم 4 أرجل حقيقية تتحرك
-    ctx.strokeStyle = "#FFF"; ctx.lineWidth = 3;
+    // رسم 4 أرجل تتحرك
+    ctx.strokeStyle = "#FFF"; ctx.lineWidth = 2;
+    let walk = Math.sin(frame * 0.2) * 10;
     for(let i=0; i<4; i++) {
-        let lx = -15 + (i * 8);
-        let ly = 12 + Math.sin(p.legPhase + i) * 10;
-        ctx.beginPath(); ctx.moveTo(lx, 5); ctx.lineTo(lx, ly); ctx.stroke();
+        ctx.beginPath(); 
+        ctx.moveTo(-10 + i*6, 5); 
+        ctx.lineTo(-10 + i*6 + walk, 15); 
+        ctx.stroke();
     }
 
-    // الجسم الملكي
-    ctx.fillStyle = p.color;
-    ctx.beginPath(); ctx.ellipse(0, 0, 25, 15, 0, 0, 7); ctx.fill();
+    // الجسم
+    ctx.fillStyle = cat.color;
+    ctx.beginPath(); ctx.ellipse(0, 0, 20, 12, 0, 0, 7); ctx.fill();
     // الرأس
-    ctx.beginPath(); ctx.arc(20, -10, 12, 0, 7); ctx.fill();
-    // عيون مرسومة بدقة
-    ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(24, -12, 2.5, 0, 7); ctx.fill();
+    ctx.beginPath(); ctx.arc(15, -8, 10, 0, 7); ctx.fill();
+    // عين
+    ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(18, -10, 2, 0, 7); ctx.fill();
     ctx.restore();
 }
 
-function drawMonster(o) {
+function drawEnemy(e) {
     ctx.save();
-    ctx.translate(o.x, o.y);
-    // جسم الوحش (شبح مرعب)
-    ctx.fillStyle = "rgba(255, 0, 0, 0.7)";
+    ctx.translate(e.x, e.y);
+    // وحش بعيون حمراء
+    ctx.fillStyle = "#333";
     ctx.beginPath(); ctx.arc(0, 0, 20, 0, 7); ctx.fill();
-    // عيون متوهجة
-    ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(-8, -5, 5, 0, 7); ctx.arc(8, -5, 5, 0, 7); ctx.fill();
-    ctx.fillStyle = "red"; ctx.beginPath(); ctx.arc(-8, -5, 2, 0, 7); ctx.arc(8, -5, 2, 0, 7); ctx.fill();
+    ctx.fillStyle = "red";
+    ctx.beginPath(); ctx.arc(-7, -5, 3, 0, 7); ctx.arc(7, -5, 3, 0, 7); ctx.fill();
     ctx.restore();
 }
 
-function gameLoop() {
-    if(!active) return;
+function loop() {
+    if(!isPlaying) return;
     
-    // مسح الشاشة ورسم خلفية فضائية
+    // تنظيف الشاشة
     ctx.fillStyle = "#050515";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     frame++;
-    distance += 1;
-    document.getElementById('dist-val').innerText = Math.floor(distance/10);
+    score++;
+    document.getElementById('dist').innerText = Math.floor(score/10);
 
-    // تحديث فيزياء القطة
-    p.v += p.g;
-    p.y += p.v;
-    drawCat(p.x, p.y);
+    // الجاذبية
+    cat.v += cat.g;
+    cat.y += cat.v;
+    drawCat();
 
-    // توليد الوحوش
-    if(frame % 90 == 0) {
-        obstacles.push({ x: canvas.width, y: Math.random() * canvas.height });
+    // ظهور الوحوش
+    if(frame % 100 === 0) {
+        enemies.push({ x: canvas.width, y: Math.random() * canvas.height });
     }
 
-    obstacles.forEach((o, i) => {
-        o.x -= 6;
-        drawMonster(o);
+    enemies.forEach((e, i) => {
+        e.x -= 6;
+        drawEnemy(e);
 
         // تصادم
-        if(Math.hypot(p.x - o.x, p.y - o.y) < 35) {
-            active = false;
-            overlay.style.display = 'flex';
+        let dx = cat.x - e.x;
+        let dy = cat.y - e.y;
+        if(Math.sqrt(dx*dx + dy*dy) < 30) {
+            isPlaying = false;
+            ui.style.display = 'flex';
         }
-
-        if(o.x < -50) obstacles.splice(i, 1);
+        if(e.x < -50) enemies.splice(i, 1);
     });
 
-    // حدود الشاشة
-    if(p.y > canvas.height || p.y < 0) {
-        active = false;
-        overlay.style.display = 'flex';
+    // سقطت القطة أو طارت
+    if(cat.y > canvas.height || cat.y < 0) {
+        isPlaying = false;
+        ui.style.display = 'flex';
     }
 
-    requestAnimationFrame(gameLoop);
+    requestAnimationFrame(loop);
 }
 </script>
 </body>
