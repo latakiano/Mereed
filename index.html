@@ -3,50 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cat Survival: The Global Mission</title>
+    <title>Cat Survival: World Class</title>
     <style>
-        :root { --gold: #FFD700; --cyan: #00F2FF; --red: #ff4757; }
-        body { margin: 0; background: #000; overflow: hidden; font-family: 'Segoe UI', sans-serif; touch-action: none; color: white; }
+        :root { --gold: #FFD700; --cyan: #00F2FF; --accent: #ff0055; }
+        body { margin: 0; background: #050510; overflow: hidden; font-family: 'Poppins', sans-serif; touch-action: none; color: white; }
         
-        /* حل مشكلة العرض والتمرير */
-        .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 1000; overflow-y: auto; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .window { background: #0a0a25; padding: 25px; border-radius: 30px; border: 3px solid var(--cyan); width: 90%; max-width: 500px; box-shadow: 0 0 50px rgba(0,242,255,0.2); }
-        
-        #distance-tag { position: fixed; top: 30px; left: -40px; background: var(--gold); color: #000; padding: 10px 50px; transform: rotate(-45deg); font-weight: bold; z-index: 100; font-size: 14px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        /* واجهة عالمية بأسلوب الزجاج الضبابي */
+        .overlay { 
+            position: fixed; inset: 0; 
+            background: rgba(0, 0, 0, 0.85); 
+            backdrop-filter: blur(15px);
+            z-index: 1000; overflow-y: auto; 
+            display: flex; flex-direction: column; align-items: center; padding: 20px;
+        }
 
-        .shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 10px; margin: 20px 0; max-height: 200px; overflow-y: auto; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 15px; }
-        .card { background: #16163a; padding: 10px; border-radius: 15px; border: 2px solid #333; text-align: center; font-size: 10px; transition: 0.3s; cursor: pointer; }
-        .card.active { border-color: var(--gold); transform: scale(1.05); }
+        .window { 
+            background: rgba(255, 255, 255, 0.05); 
+            padding: 30px; border-radius: 40px; 
+            border: 1px solid rgba(255, 215, 0, 0.3); 
+            width: 90%; max-width: 550px; 
+            text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
 
-        .leaderboard { margin: 15px 0; background: rgba(0,0,0,0.5); border-radius: 15px; padding: 10px; font-size: 12px; }
-        .leader-item { display: flex; justify-content: space-between; border-bottom: 1px solid #222; padding: 5px 0; }
+        h1.main-title { 
+            font-size: 32px; margin-bottom: 5px; 
+            background: linear-gradient(to right, var(--gold), #fff);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: 2px;
+        }
 
-        .donate-section { background: linear-gradient(45deg, #1e3799, #0c2461); padding: 15px; border-radius: 20px; border: 1px solid var(--cyan); margin-top: 15px; text-align: center; }
-        .start-btn { background: var(--gold); color: #000; padding: 15px 60px; border-radius: 50px; border: none; font-size: 22px; font-weight: bold; cursor: pointer; margin-top: 20px; box-shadow: 0 10px 30px rgba(255,215,0,0.4); }
+        .shop-grid { 
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); 
+            gap: 15px; margin: 25px 0; max-height: 250px; overflow-y: auto;
+            padding: 10px; border-radius: 20px; background: rgba(0,0,0,0.3);
+        }
+
+        .card { 
+            background: rgba(255,255,255,0.08); padding: 15px; border-radius: 20px;
+            border: 2px solid transparent; transition: 0.4s; cursor: pointer;
+        }
+        .card.active { border-color: var(--gold); background: rgba(255, 215, 0, 0.1); transform: scale(1.05); }
+
+        .donate-btn {
+            background: linear-gradient(45deg, #ff0055, #ff4757);
+            border: none; padding: 12px 30px; border-radius: 15px;
+            color: white; font-weight: bold; cursor: pointer; transition: 0.3s;
+            box-shadow: 0 10px 20px rgba(255, 0, 85, 0.3);
+        }
+
+        .start-btn { 
+            background: var(--gold); color: #000; padding: 18px 70px; 
+            border-radius: 50px; border: none; font-size: 24px; 
+            font-weight: 900; cursor: pointer; margin-top: 30px;
+            transition: 0.3s; text-transform: uppercase;
+        }
+
+        #distance-tag { 
+            position: fixed; top: 40px; left: -50px; 
+            background: var(--gold); color: #000; 
+            padding: 10px 60px; transform: rotate(-45deg); 
+            font-weight: bold; z-index: 100; box-shadow: 0 5px 20px rgba(0,0,0,0.8);
+        }
+
+        canvas { display: block; }
     </style>
 </head>
 <body>
 
-<div id="distance-tag">DISTANCE: <span id="dist-val">0</span>m</div>
+<div id="distance-tag">MILES: <span id="dist-val">0</span></div>
 
 <div id="main-overlay" class="overlay">
     <div class="window">
-        <h2 style="color:var(--gold); margin:0;">ROYAL SHOP & CHARITY</h2>
-        <p style="font-size:12px; color:#888;">استعد للمرحلة <span id="stage-val">1</span> - كل دولار ينقذ حياة</p>
+        <h1 class="main-title">ROYAL CAT ADVENTURE</h1>
+        <p style="color: #aaa; font-size: 14px;">مهمة إنقاذ عالمية - المرحلة <span id="stage-val">1</span></p>
 
         <div class="shop-grid" id="cat-shop"></div>
 
-        <div class="leaderboard">
-            <strong>🏆 الترتيب العالمي:</strong>
-            <div id="leader-list"></div>
-        </div>
-
-        <div class="donate-section">
-            <div style="font-size:14px;">🏥 تبرع لعلاج القطة المريضة ($1)</div>
-            <button onclick="donate()" style="background:var(--red); border:none; color:white; padding:8px 20px; border-radius:10px; margin-top:10px; cursor:pointer; font-weight:bold;">تبرع الآن ❤️</button>
+        <div style="background: rgba(0,0,0,0.4); padding: 15px; border-radius: 20px; margin-bottom: 20px;">
+            <p style="margin: 0 0 10px 0; font-size: 13px;">🏥 تبرع إنساني لعلاج القطط والمحتاجين</p>
+            <button class="donate-btn" onclick="donate()">تبرع بقيمة $1.00</button>
         </div>
     </div>
-    <button class="start-btn" onclick="startGame()">انطلق للإنقاذ!</button>
+    <button class="start-btn" onclick="startGame()">START GAME</button>
 </div>
 
 <canvas id="game"></canvas>
@@ -54,105 +92,122 @@
 <script>
 const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
 let active = false, stage = 1, distance = 0, frame = 0;
-let obstacles = [], coins = [], p = { x: 120, y: 0, v: 0, g: 0.5, j: -9, color: "#FFF", legPhase: 0 };
-let leaders = [
-    {n: "Leo_UK", s: 15400}, {n: "Sara_SY", s: 12100}, {n: "Dev_Jimmy", s: 9800}
-];
-
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-function playSfx(f, t, d) {
-    let o = audioCtx.createOscillator(), g = audioCtx.createGain();
-    o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime+d);
-    o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+d);
-}
+let obstacles = [], coins = [];
+// تحسين الفيزياء: تقليل الجاذبية (g) وزيادة قوة القفزة (j)
+let p = { x: 150, y: 0, v: 0, g: 0.45, j: -8.5, color: "#FFD700", legPhase: 0 };
 
 function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
 window.onresize = resize; resize();
 
-// بناء المتجر والترتيب
-function updateUI() {
-    const shop = document.getElementById('cat-shop');
-    shop.innerHTML = "";
-    for(let i=1; i<=20; i++) {
-        shop.innerHTML += `<div class="card ${i===stage?'active':''}">🐱<br>قطة ${i}<br><span style="color:var(--gold)">$0.99</span></div>`;
-    }
-    const list = document.getElementById('leader-list');
-    list.innerHTML = "";
-    leaders.sort((a,b)=>b.s-a.s).slice(0,3).forEach(l => {
-        list.innerHTML += `<div class="leader-item"><span>${l.n}</span><span>${l.s}m</span></div>`;
-    });
+// بناء المتجر العالمي
+const shop = document.getElementById('cat-shop');
+for(let i=1; i<=20; i++) {
+    shop.innerHTML += `
+        <div class="card ${i===1?'active':''}" onclick="selectLevel(${i})">
+            <div style="font-size:30px">🐱</div>
+            <div style="font-size:11px; margin-top:5px;">LEVEL ${i}</div>
+            <div style="font-size:10px; color:var(--gold)">$0.99</div>
+        </div>`;
 }
-updateUI();
 
 function startGame() {
-    if(audioCtx.state === 'suspended') audioCtx.resume();
-    obstacles = []; coins = []; distance = 0; p.y = canvas.height/2;
+    obstacles = []; coins = []; distance = 0;
+    p.y = canvas.height / 2;
+    p.v = 0; 
     document.getElementById('main-overlay').style.display = 'none';
     active = true; animate();
 }
 
-window.onmousedown = () => { if(active) { p.v = p.j; playSfx(300, 'sine', 0.2); } };
+// التحكم باللمس أو الماوس
+const handleAction = (e) => { 
+    if(active) { p.v = p.j; } 
+    if(e.type === 'touchstart') e.preventDefault();
+};
+window.addEventListener('mousedown', handleAction);
+window.addEventListener('touchstart', handleAction, {passive: false});
 
 function drawCat(x, y) {
-    p.legPhase += 0.2;
+    p.legPhase += 0.15;
     ctx.save(); ctx.translate(x, y);
-    // أرجل تتحرك
-    ctx.strokeStyle = p.color; ctx.lineWidth = 3;
+    
+    // الأرجل مع حركة انسيابية
+    ctx.strokeStyle = "#fff"; ctx.lineWidth = 3;
     for(let i=0; i<4; i++) {
-        let off = i * Math.PI/2;
-        let ly = 15 + Math.sin(p.legPhase + off) * 8;
-        ctx.beginPath(); ctx.moveTo(-15 + i*8, 5); ctx.lineTo(-15 + i*8, ly); ctx.stroke();
+        let legX = -15 + (i * 10);
+        let legY = 15 + Math.sin(p.legPhase + i) * 10;
+        ctx.beginPath(); ctx.moveTo(legX, 5); ctx.lineTo(legX, legY); ctx.stroke();
     }
-    // جسم ورأس
-    ctx.fillStyle = p.color; ctx.beginPath(); ctx.ellipse(0, 0, 25, 15, 0, 0, 7); ctx.fill();
-    ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(20, -10, 12, 0, 7); ctx.fill();
-    ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(25, -12, 2, 0, 7); ctx.fill();
+
+    // الجسم (قطة ملكية)
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.ellipse(0, 0, 30, 18, 0, 0, Math.PI*2); ctx.fill();
+    // الرأس
+    ctx.beginPath(); ctx.arc(22, -10, 14, 0, Math.PI*2); ctx.fill();
+    // الأذنين
+    ctx.beginPath(); ctx.moveTo(15, -20); ctx.lineTo(22, -32); ctx.lineTo(29, -20); ctx.fill();
+    // عيون متوهجة
+    ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(26, -12, 3, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = varColor('--cyan'); ctx.beginPath(); ctx.arc(26, -12, 1.5, 0, Math.PI*2); ctx.fill();
+    
     ctx.restore();
 }
 
-function drawMonster(o) {
-    ctx.save(); ctx.translate(o.x, o.y);
-    // أجنحة تتحرك
-    let wing = Math.sin(frame * 0.2) * 20;
-    ctx.fillStyle = "#3d3d3d";
-    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(-30, wing); ctx.lineTo(-10, 0); ctx.fill();
-    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(30, wing); ctx.lineTo(10, 0); ctx.fill();
-    // جسم مرعب
-    ctx.fillStyle = "#1a1a1a"; ctx.beginPath(); ctx.arc(0, 0, 20, 0, 7); ctx.fill();
-    ctx.fillStyle = "red"; ctx.beginPath(); ctx.arc(-8, -5, 3, 0, 7); ctx.arc(8, -5, 3, 0, 7); ctx.fill();
-    ctx.restore();
-}
+function varColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name); }
 
 function animate() {
     if(!active) return;
     frame++; distance++;
-    document.getElementById('dist-val').innerText = distance;
-    ctx.fillStyle = "#020210"; ctx.fillRect(0,0,canvas.width, canvas.height);
+    document.getElementById('dist-val').innerText = Math.floor(distance/10);
 
-    p.v += p.g; p.y += p.v;
+    // خلفية متدرجة سينمائية
+    let grd = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    grd.addColorStop(0, "#050515");
+    grd.addColorStop(1, `hsl(${(200 + stage*20)%360}, 50%, 15%)`);
+    ctx.fillStyle = grd; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // فيزياء الحركة
+    p.v += p.g;
+    p.y += p.v;
+
     drawCat(p.x, p.y);
 
-    if(frame % 80 == 0) obstacles.push({x: canvas.width, y: Math.random()*canvas.height});
-    
+    // توليد عوائق وحوش مرعبة
+    if(frame % Math.max(40, 90 - stage*2) == 0) {
+        obstacles.push({
+            x: canvas.width, 
+            y: Math.random() * canvas.height, 
+            s: 40 + Math.random()*50,
+            speed: 6 + (stage * 0.5)
+        });
+    }
+
     obstacles.forEach((o, i) => {
-        o.x -= (7 + stage);
-        drawMonster(o);
-        if(Math.hypot(p.x-o.x, p.y-o.y) < 35) endGame();
+        o.x -= o.speed;
+        // رسم وحش "الظل"
+        ctx.fillStyle = "rgba(255, 0, 85, 0.8)";
+        ctx.shadowBlur = 15; ctx.shadowColor = "red";
+        ctx.beginPath(); ctx.arc(o.x, o.y, o.s/2, 0, Math.PI*2); ctx.fill();
+        ctx.shadowBlur = 0;
+
+        // تصادم دقيق
+        if(Math.hypot(p.x - o.x, p.y - o.y) < (o.s/2 + 20)) endGame();
+        if(o.x < -100) obstacles.splice(i, 1);
     });
 
+    // حدود الشاشة
     if(p.y > canvas.height || p.y < 0) endGame();
+
     requestAnimationFrame(animate);
 }
 
 function endGame() {
-    active = false; playSfx(100, 'sawtooth', 0.4);
-    leaders.push({n: "You", s: distance});
-    updateUI();
+    active = false;
     document.getElementById('main-overlay').style.display = 'flex';
 }
 
-function donate() { alert("شكراً لقلبك الطيب! تبرعك سيصل لمن يحتاجه."); }
+function donate() {
+    alert("سيتم فتح بوابة الدفع الآمنة.. شكراً لمساهمتك في إنقاذ الأرواح! ❤️");
+}
 </script>
 </body>
 </html>
