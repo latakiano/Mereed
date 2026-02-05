@@ -3,66 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cat Survival: World Class</title>
+    <title>Cat Survival: The Masterpiece</title>
     <style>
-        :root { --gold: #FFD700; --cyan: #00F2FF; --accent: #ff0055; }
-        body { margin: 0; background: #050510; overflow: hidden; font-family: 'Poppins', sans-serif; touch-action: none; color: white; }
+        :root { --gold: #FFD700; --cyan: #00F2FF; --bg: #050515; }
+        body { margin: 0; background: var(--bg); overflow: hidden; font-family: 'Arial', sans-serif; touch-action: none; color: white; }
         
-        /* واجهة عالمية بأسلوب الزجاج الضبابي */
+        /* واجهة قابلة للتمرير لحل مشكلة الشاشة العرضية */
         .overlay { 
             position: fixed; inset: 0; 
-            background: rgba(0, 0, 0, 0.85); 
-            backdrop-filter: blur(15px);
-            z-index: 1000; overflow-y: auto; 
-            display: flex; flex-direction: column; align-items: center; padding: 20px;
+            background: rgba(0,0,0,0.9); 
+            z-index: 1000; 
+            display: flex; flex-direction: column; align-items: center; 
+            overflow-y: auto; padding: 20px;
         }
 
         .window { 
-            background: rgba(255, 255, 255, 0.05); 
-            padding: 30px; border-radius: 40px; 
-            border: 1px solid rgba(255, 215, 0, 0.3); 
-            width: 90%; max-width: 550px; 
-            text-align: center; box-shadow: 0 25px 50px rgba(0,0,0,0.5);
-        }
-
-        h1.main-title { 
-            font-size: 32px; margin-bottom: 5px; 
-            background: linear-gradient(to right, var(--gold), #fff);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            letter-spacing: 2px;
+            background: linear-gradient(145deg, #0a0a25, #16163a); 
+            padding: 25px; border-radius: 30px; 
+            border: 2px solid var(--cyan); 
+            width: 90%; max-width: 450px; 
+            text-align: center; box-shadow: 0 0 50px rgba(0,242,255,0.3);
+            margin-bottom: 20px;
         }
 
         .shop-grid { 
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); 
-            gap: 15px; margin: 25px 0; max-height: 250px; overflow-y: auto;
-            padding: 10px; border-radius: 20px; background: rgba(0,0,0,0.3);
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); 
+            gap: 12px; margin: 20px 0; 
+            max-height: 200px; overflow-y: auto;
+            background: rgba(0,0,0,0.4); padding: 10px; border-radius: 15px;
         }
 
         .card { 
-            background: rgba(255,255,255,0.08); padding: 15px; border-radius: 20px;
-            border: 2px solid transparent; transition: 0.4s; cursor: pointer;
+            background: #1f1f50; padding: 10px; border-radius: 15px; 
+            border: 2px solid #333; cursor: pointer; transition: 0.3s;
         }
-        .card.active { border-color: var(--gold); background: rgba(255, 215, 0, 0.1); transform: scale(1.05); }
-
-        .donate-btn {
-            background: linear-gradient(45deg, #ff0055, #ff4757);
-            border: none; padding: 12px 30px; border-radius: 15px;
-            color: white; font-weight: bold; cursor: pointer; transition: 0.3s;
-            box-shadow: 0 10px 20px rgba(255, 0, 85, 0.3);
-        }
+        .card.active { border-color: var(--gold); transform: scale(1.05); background: #2a2a6a; }
 
         .start-btn { 
-            background: var(--gold); color: #000; padding: 18px 70px; 
-            border-radius: 50px; border: none; font-size: 24px; 
-            font-weight: 900; cursor: pointer; margin-top: 30px;
-            transition: 0.3s; text-transform: uppercase;
+            background: #ffff00; color: black; padding: 20px 60px; 
+            border-radius: 50px; border: none; font-size: 22px; 
+            font-weight: bold; cursor: pointer; 
+            box-shadow: 0 10px 20px rgba(255,255,0,0.4);
+            z-index: 1001;
         }
 
         #distance-tag { 
-            position: fixed; top: 40px; left: -50px; 
-            background: var(--gold); color: #000; 
-            padding: 10px 60px; transform: rotate(-45deg); 
-            font-weight: bold; z-index: 100; box-shadow: 0 5px 20px rgba(0,0,0,0.8);
+            position: fixed; top: 30px; left: -40px; 
+            background: var(--gold); color: black; 
+            padding: 8px 50px; transform: rotate(-45deg); 
+            font-weight: bold; z-index: 100;
         }
 
         canvas { display: block; }
@@ -70,21 +59,22 @@
 </head>
 <body>
 
-<div id="distance-tag">MILES: <span id="dist-val">0</span></div>
+<div id="distance-tag">DISTANCE: <span id="dist-val">0</span>m</div>
 
 <div id="main-overlay" class="overlay">
     <div class="window">
-        <h1 class="main-title">ROYAL CAT ADVENTURE</h1>
-        <p style="color: #aaa; font-size: 14px;">مهمة إنقاذ عالمية - المرحلة <span id="stage-val">1</span></p>
+        <h1 style="color:var(--gold); margin:0;">ROYAL SHOP</h1>
+        <p style="font-size:12px; color:#aaa;">اختر قطتك (20 مستوى) وساهم في الإنقاذ</p>
+        
+        <div class="shop-grid" id="cat-shop">
+            </div>
 
-        <div class="shop-grid" id="cat-shop"></div>
-
-        <div style="background: rgba(0,0,0,0.4); padding: 15px; border-radius: 20px; margin-bottom: 20px;">
-            <p style="margin: 0 0 10px 0; font-size: 13px;">🏥 تبرع إنساني لعلاج القطط والمحتاجين</p>
-            <button class="donate-btn" onclick="donate()">تبرع بقيمة $1.00</button>
+        <div style="background:rgba(46, 204, 113, 0.2); padding:15px; border-radius:20px; border:1px solid #2ecc71;">
+            <p style="margin:0; font-size:13px;">🏥 تبرع إنساني لعلاج القطط ($1)</p>
+            <button onclick="alert('شكراً لتبرعك!')" style="background:#2ecc71; border:none; color:white; padding:5px 15px; border-radius:10px; margin-top:10px; cursor:pointer;">تبرع الآن</button>
         </div>
     </div>
-    <button class="start-btn" onclick="startGame()">START GAME</button>
+    <button class="start-btn" onclick="startGame()">START GAME / ابدأ</button>
 </div>
 
 <canvas id="game"></canvas>
@@ -93,108 +83,94 @@
 const canvas = document.getElementById('game'), ctx = canvas.getContext('2d');
 let active = false, stage = 1, distance = 0, frame = 0;
 let obstacles = [], coins = [];
-// تحسين الفيزياء: تقليل الجاذبية (g) وزيادة قوة القفزة (j)
-let p = { x: 150, y: 0, v: 0, g: 0.45, j: -8.5, color: "#FFD700", legPhase: 0 };
+// تم ضبط الجاذبية والقفز ليكون ممتعاً وسهلاً
+let p = { x: 120, y: 0, v: 0, g: 0.5, j: -10, color: "#FFF", legPhase: 0 };
 
-function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+function resize() { 
+    canvas.width = window.innerWidth; 
+    canvas.height = window.innerHeight; 
+}
 window.onresize = resize; resize();
 
-// بناء المتجر العالمي
+// إنشاء 20 متجر
 const shop = document.getElementById('cat-shop');
 for(let i=1; i<=20; i++) {
-    shop.innerHTML += `
-        <div class="card ${i===1?'active':''}" onclick="selectLevel(${i})">
-            <div style="font-size:30px">🐱</div>
-            <div style="font-size:11px; margin-top:5px;">LEVEL ${i}</div>
-            <div style="font-size:10px; color:var(--gold)">$0.99</div>
-        </div>`;
+    const card = document.createElement('div');
+    card.className = `card ${i===1?'active':''}`;
+    card.onclick = () => {
+        document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        p.color = `hsl(${(i*40)%360}, 70%, 70%)`; // تغيير لون القطة حسب المتجر
+    };
+    card.innerHTML = `<div style="font-size:25px">🐱</div><div style="font-size:10px">LVL ${i}</div><div style="font-size:9px; color:var(--gold)">$0.99</div>`;
+    shop.appendChild(card);
 }
 
 function startGame() {
-    obstacles = []; coins = []; distance = 0;
+    active = true;
+    obstacles = []; distance = 0; frame = 0;
     p.y = canvas.height / 2;
-    p.v = 0; 
+    p.v = 0;
     document.getElementById('main-overlay').style.display = 'none';
-    active = true; animate();
+    animate();
 }
 
-// التحكم باللمس أو الماوس
-const handleAction = (e) => { 
-    if(active) { p.v = p.j; } 
-    if(e.type === 'touchstart') e.preventDefault();
-};
-window.addEventListener('mousedown', handleAction);
-window.addEventListener('touchstart', handleAction, {passive: false});
+// التحكم باللمس والماوس
+function jump() { if(active) p.v = p.j; }
+window.addEventListener('mousedown', jump);
+window.addEventListener('touchstart', (e) => { jump(); e.preventDefault(); }, {passive: false});
 
 function drawCat(x, y) {
-    p.legPhase += 0.15;
+    p.legPhase += 0.2;
     ctx.save(); ctx.translate(x, y);
     
-    // الأرجل مع حركة انسيابية
-    ctx.strokeStyle = "#fff"; ctx.lineWidth = 3;
+    // رسم 4 أرجل تتحرك حقيقة
+    ctx.strokeStyle = p.color; ctx.lineWidth = 3;
     for(let i=0; i<4; i++) {
         let legX = -15 + (i * 10);
         let legY = 15 + Math.sin(p.legPhase + i) * 10;
         ctx.beginPath(); ctx.moveTo(legX, 5); ctx.lineTo(legX, legY); ctx.stroke();
     }
 
-    // الجسم (قطة ملكية)
-    ctx.fillStyle = p.color;
-    ctx.beginPath(); ctx.ellipse(0, 0, 30, 18, 0, 0, Math.PI*2); ctx.fill();
+    // الجسم
+    ctx.fillStyle = p.color; ctx.beginPath(); ctx.ellipse(0, 0, 25, 15, 0, 0, 7); ctx.fill();
     // الرأس
-    ctx.beginPath(); ctx.arc(22, -10, 14, 0, Math.PI*2); ctx.fill();
-    // الأذنين
-    ctx.beginPath(); ctx.moveTo(15, -20); ctx.lineTo(22, -32); ctx.lineTo(29, -20); ctx.fill();
-    // عيون متوهجة
-    ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(26, -12, 3, 0, Math.PI*2); ctx.fill();
-    ctx.fillStyle = varColor('--cyan'); ctx.beginPath(); ctx.arc(26, -12, 1.5, 0, Math.PI*2); ctx.fill();
-    
+    ctx.beginPath(); ctx.arc(20, -10, 12, 0, 7); ctx.fill();
+    // عيون
+    ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(24, -12, 2, 0, 7); ctx.fill();
     ctx.restore();
 }
-
-function varColor(name) { return getComputedStyle(document.documentElement).getPropertyValue(name); }
 
 function animate() {
     if(!active) return;
     frame++; distance++;
     document.getElementById('dist-val').innerText = Math.floor(distance/10);
 
-    // خلفية متدرجة سينمائية
-    let grd = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    grd.addColorStop(0, "#050515");
-    grd.addColorStop(1, `hsl(${(200 + stage*20)%360}, 50%, 15%)`);
-    ctx.fillStyle = grd; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // خلفية
+    ctx.fillStyle = "#020210"; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // فيزياء الحركة
+    // فيزياء
     p.v += p.g;
     p.y += p.v;
 
     drawCat(p.x, p.y);
 
-    // توليد عوائق وحوش مرعبة
-    if(frame % Math.max(40, 90 - stage*2) == 0) {
-        obstacles.push({
-            x: canvas.width, 
-            y: Math.random() * canvas.height, 
-            s: 40 + Math.random()*50,
-            speed: 6 + (stage * 0.5)
-        });
+    // وحوش (عوائق)
+    if(frame % 100 == 0) {
+        obstacles.push({x: canvas.width, y: Math.random()*canvas.height, s: 40});
     }
 
     obstacles.forEach((o, i) => {
-        o.x -= o.speed;
-        // رسم وحش "الظل"
-        ctx.fillStyle = "rgba(255, 0, 85, 0.8)";
-        ctx.shadowBlur = 15; ctx.shadowColor = "red";
-        ctx.beginPath(); ctx.arc(o.x, o.y, o.s/2, 0, Math.PI*2); ctx.fill();
-        ctx.shadowBlur = 0;
+        o.x -= 7;
+        // رسم وحش مرعب (عين حمراء)
+        ctx.fillStyle = "#ff4757";
+        ctx.beginPath(); ctx.arc(o.x, o.y, 20, 0, 7); ctx.fill();
+        ctx.fillStyle = "white"; ctx.beginPath(); ctx.arc(o.x+5, o.y-5, 5, 0, 7); ctx.fill();
 
-        // تصادم دقيق
-        if(Math.hypot(p.x - o.x, p.y - o.y) < (o.s/2 + 20)) endGame();
-        if(o.x < -100) obstacles.splice(i, 1);
+        if(Math.hypot(p.x - o.x, p.y - o.y) < 35) endGame();
+        if(o.x < -50) obstacles.splice(i, 1);
     });
 
-    // حدود الشاشة
     if(p.y > canvas.height || p.y < 0) endGame();
 
     requestAnimationFrame(animate);
@@ -203,10 +179,6 @@ function animate() {
 function endGame() {
     active = false;
     document.getElementById('main-overlay').style.display = 'flex';
-}
-
-function donate() {
-    alert("سيتم فتح بوابة الدفع الآمنة.. شكراً لمساهمتك في إنقاذ الأرواح! ❤️");
 }
 </script>
 </body>
