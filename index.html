@@ -3,201 +3,150 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Cat Survival: The Final Masterpiece</title>
+    <title>Cat Adventure 2026</title>
     <style>
-        :root { --gold: #FFD700; --cyan: #00F2FF; --red: #ff4757; }
-        body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; touch-action: none; }
+        body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; text-align: center; }
+        canvas { display: block; background: #050515; }
         
-        /* الواجهة الكبرى - تظهر فوراً */
-        #ui-layer { 
-            position: fixed; inset: 0; background: rgba(0,0,0,0.9); 
-            z-index: 9999; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; padding: 20px;
+        /* واجهة بسيطة وقوية جداً */
+        #ui { 
+            position: fixed; inset: 0; background: rgba(0,0,0,0.8); 
+            z-index: 100; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; color: white;
         }
 
-        .window { 
-            background: linear-gradient(145deg, #0a0a25, #16163a); 
-            padding: 20px; border-radius: 30px; border: 3px solid var(--cyan); 
-            width: 90%; max-width: 400px; text-align: center; color: white;
-            box-shadow: 0 0 30px var(--cyan);
+        .box { 
+            background: #16163a; padding: 20px; border-radius: 20px; 
+            border: 2px solid #00f2ff; width: 80%; max-width: 350px;
         }
 
-        .shop-grid { 
-            display: grid; grid-template-columns: repeat(4, 1fr); 
-            gap: 10px; margin: 15px 0; max-height: 150px; overflow-y: auto;
-            background: rgba(0,0,0,0.5); padding: 10px; border-radius: 15px;
+        .btn { 
+            background: #ffd700; color: black; padding: 15px 40px; 
+            border-radius: 30px; border: none; font-size: 20px; 
+            font-weight: bold; cursor: pointer; margin-top: 20px;
         }
 
-        .card { 
-            background: #1f1f50; padding: 5px; border-radius: 10px; 
-            border: 2px solid #333; cursor: pointer; font-size: 10px;
-        }
-        .card.active { border-color: var(--gold); background: #2a2a6a; }
-
-        .btn-start { 
-            background: var(--gold); color: black; padding: 20px 60px; 
-            border-radius: 50px; border: none; font-size: 24px; 
-            font-weight: bold; cursor: pointer; margin-top: 25px;
-            box-shadow: 0 0 20px var(--gold);
-        }
-
-        canvas { display: block; background: #050510; }
-        
-        #hud { 
-            position: fixed; top: 10px; width: 100%; text-align: center;
-            color: var(--gold); font-weight: bold; pointer-events: none; z-index: 100;
-        }
+        #score { position: fixed; top: 10px; width: 100%; color: #ffd700; font-size: 20px; z-index: 50; }
     </style>
 </head>
 <body>
 
-<div id="hud">الارتفاع: <span id="dist">0</span> متر</div>
+<div id="score">المسافة: 0</div>
 
-<div id="ui-layer">
-    <div class="window">
-        <h2 style="color:var(--gold); margin:0;">متجر القطط الملكي</h2>
-        <p style="font-size:12px;">اختر قطتك وانطلق للمهمة العالمية</p>
-        
-        <div class="shop-grid" id="shop"></div>
-
-        <div style="border:1px dashed var(--red); padding:10px; border-radius:15px;">
-            <p style="margin:0; font-size:11px;">🏥 تبرع إنساني $1 لعلاج القطط</p>
-            <button onclick="alert('شكراً لقلبك الطيب!')" style="background:var(--red); border:none; color:white; padding:5px 15px; border-radius:8px; cursor:pointer;">تبرع</button>
-        </div>
+<div id="ui">
+    <div class="box">
+        <h2>لعبة القطة الملكية 🐱</h2>
+        <p>اضغط للقفز وتجنب الوحوش</p>
+        <div style="font-size: 12px; color: #aaa; margin: 10px 0;">(المتجر سيفتح تلقائياً بعد كل مرحلة)</div>
     </div>
-    <button class="btn-start" id="runBtn">ابدأ اللعب الآن</button>
+    <button class="btn" id="startBtn">ابدأ اللعب الآن</button>
 </div>
 
-<canvas id="game"></canvas>
+<canvas id="c"></canvas>
 
 <script>
-const canvas = document.getElementById('game');
+const canvas = document.getElementById('c');
 const ctx = canvas.getContext('2d');
-const ui = document.getElementById('ui-layer');
-const runBtn = document.getElementById('runBtn');
+const ui = document.getElementById('ui');
+const btn = document.getElementById('startBtn');
+const scoreDiv = document.getElementById('score');
 
-let isPlaying = false;
-let frame = 0;
+let playing = false;
 let score = 0;
+let frame = 0;
 let enemies = [];
-let cat = { x: 80, y: 0, v: 0, g: 0.4, j: -8, color: "#FFD700" };
+let cat = { x: 50, y: 0, v: 0, g: 0.5, j: -8, size: 30 };
 
-// ضبط الحجم
-function setup() {
+// ضبط الحجم ليملأ الشاشة فوراً
+function resize() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
 }
-window.onresize = setup;
-setup();
+window.onresize = resize;
+resize();
 
-// توليد المتجر
-const shopBox = document.getElementById('shop');
-for(let i=1; i<=20; i++) {
-    let d = document.createElement('div');
-    d.className = `card ${i===1?'active':''}`;
-    d.innerHTML = `🐱<br>L${i}`;
-    d.onclick = () => {
-        document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
-        d.classList.add('active');
-        cat.color = `hsl(${i*40}, 80%, 60%)`;
-    };
-    shopBox.appendChild(d);
-}
-
-// البدء الحقيقي
-runBtn.addEventListener('click', () => {
+// وظيفة البدء
+btn.onclick = function() {
     ui.style.display = 'none';
     cat.y = canvas.height / 2;
     cat.v = 0;
-    enemies = [];
     score = 0;
+    enemies = [];
     frame = 0;
-    isPlaying = true;
-    loop();
-});
+    playing = true;
+    update();
+};
 
-// القفز
-function jump() { if(isPlaying) cat.v = cat.j; }
-window.addEventListener('mousedown', jump);
-window.addEventListener('touchstart', (e) => { jump(); e.preventDefault(); }, {passive: false});
+// التحكم بالقفز (ماوس أو لمس)
+function jump() { if(playing) cat.v = cat.j; }
+window.onmousedown = jump;
+window.ontouchstart = function(e) { jump(); e.preventDefault(); };
 
-function drawCat() {
-    ctx.save();
-    ctx.translate(cat.x, cat.y);
-    
-    // رسم 4 أرجل تتحرك
-    ctx.strokeStyle = "#FFF"; ctx.lineWidth = 2;
-    let walk = Math.sin(frame * 0.2) * 10;
-    for(let i=0; i<4; i++) {
-        ctx.beginPath(); 
-        ctx.moveTo(-10 + i*6, 5); 
-        ctx.lineTo(-10 + i*6 + walk, 15); 
-        ctx.stroke();
-    }
+function update() {
+    if(!playing) return;
 
-    // الجسم
-    ctx.fillStyle = cat.color;
-    ctx.beginPath(); ctx.ellipse(0, 0, 20, 12, 0, 0, 7); ctx.fill();
-    // الرأس
-    ctx.beginPath(); ctx.arc(15, -8, 10, 0, 7); ctx.fill();
-    // عين
-    ctx.fillStyle = "black"; ctx.beginPath(); ctx.arc(18, -10, 2, 0, 7); ctx.fill();
-    ctx.restore();
-}
-
-function drawEnemy(e) {
-    ctx.save();
-    ctx.translate(e.x, e.y);
-    // وحش بعيون حمراء
-    ctx.fillStyle = "#333";
-    ctx.beginPath(); ctx.arc(0, 0, 20, 0, 7); ctx.fill();
-    ctx.fillStyle = "red";
-    ctx.beginPath(); ctx.arc(-7, -5, 3, 0, 7); ctx.arc(7, -5, 3, 0, 7); ctx.fill();
-    ctx.restore();
-}
-
-function loop() {
-    if(!isPlaying) return;
-    
-    // تنظيف الشاشة
+    // مسح الشاشة
     ctx.fillStyle = "#050515";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     frame++;
     score++;
-    document.getElementById('dist').innerText = Math.floor(score/10);
+    scoreDiv.innerText = "المسافة: " + Math.floor(score/10);
 
-    // الجاذبية
+    // تحريك القطة
     cat.v += cat.g;
     cat.y += cat.v;
-    drawCat();
 
-    // ظهور الوحوش
-    if(frame % 100 === 0) {
+    // رسم القطة (مع أرجل تتحرك)
+    ctx.fillStyle = "#ffd700";
+    ctx.beginPath();
+    ctx.ellipse(cat.x, cat.y, 25, 15, 0, 0, 7);
+    ctx.fill();
+    
+    // الأرجل
+    ctx.strokeStyle = "white";
+    let legMove = Math.sin(frame * 0.2) * 10;
+    for(let i=0; i<4; i++) {
+        ctx.beginPath();
+        ctx.moveTo(cat.x - 15 + i*10, cat.y + 10);
+        ctx.lineTo(cat.x - 15 + i*10 + legMove, cat.y + 20);
+        ctx.stroke();
+    }
+
+    // الوحوش
+    if(frame % 80 == 0) {
         enemies.push({ x: canvas.width, y: Math.random() * canvas.height });
     }
 
-    enemies.forEach((e, i) => {
-        e.x -= 6;
-        drawEnemy(e);
+    for(let i = enemies.length-1; i >= 0; i--) {
+        enemies[i].x -= 6;
+        
+        // رسم الوحش (دائرة حمراء بعين)
+        ctx.fillStyle = "red";
+        ctx.beginPath();
+        ctx.arc(enemies[i].x, enemies[i].y, 20, 0, 7);
+        ctx.fill();
+        ctx.fillStyle = "white";
+        ctx.beginPath(); ctx.arc(enemies[i].x+5, enemies[i].y-5, 5, 0, 7); ctx.fill();
 
-        // تصادم
-        let dx = cat.x - e.x;
-        let dy = cat.y - e.y;
-        if(Math.sqrt(dx*dx + dy*dy) < 30) {
-            isPlaying = false;
+        // فحص التصادم
+        let dx = cat.x - enemies[i].x;
+        let dy = cat.y - enemies[i].y;
+        if(Math.sqrt(dx*dx + dy*dy) < 40) {
+            playing = false;
             ui.style.display = 'flex';
         }
-        if(e.x < -50) enemies.splice(i, 1);
-    });
 
-    // سقطت القطة أو طارت
+        if(enemies[i].x < -50) enemies.splice(i, 1);
+    }
+
+    // الخروج من الشاشة
     if(cat.y > canvas.height || cat.y < 0) {
-        isPlaying = false;
+        playing = false;
         ui.style.display = 'flex';
     }
 
-    requestAnimationFrame(loop);
+    requestAnimationFrame(update);
 }
 </script>
 </body>
